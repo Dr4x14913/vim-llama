@@ -16,7 +16,6 @@ function! codellama#Start()
   call system("echo '" . context . "' > .codellama.ctx")
   call system("echo '" . cmd . "' > .codellama.cmd")
   call system(cmd)
-  call setreg("a", "")
   call timer_start(1000, 'codellama#Fetch')
 endfunction
 
@@ -34,7 +33,11 @@ function! codellama#Fetch(timer)
   let string_to_add = ""
   let s:register    = 0
   for j in res
-    let obj        = json_decode(j)
+    try
+      let obj = json_decode(j)
+    catch
+      break
+    endtry
     let s:timecode = get(obj, "created_at")
     let s:done     = get(obj, "done")
     if s:done
@@ -52,26 +55,22 @@ function! codellama#Fetch(timer)
     endif
   endfor
 
-  call setreg("a", string_to_add, "v")
-
-  let s:append_index = 0
   for line in split(string_to_add, "\n")
-    call cursor(s:last_ended + s:append_index, 0)
+    call cursor(s:last_ended, 0)
     exec "normal! o<ESC>"
     call setline(line("."), line)
-    let s:append_index = s:append_index + 1
+    let s:last_ended = s:last_ended + 1
   endfor
-  let s:last_ended = line(".")
 
   if s:stopped == 0
-    call timer_start(1000, 'codellama#Fetch')
+    call timer_start(500, 'codellama#Fetch')
   endif
 endfunction
 
 function! codellama#Stop()
-  let s:pid = system("ps x | grep codellama | grep -v grep | awk -F' ' '{print $1}' | tail -1")
-  echo system("kill -9 " . s:pid)
-  echo "killed " . s:pid ."\n"
+  "let s:pid = system("ps x | grep codellama | grep -v grep | awk -F' ' '{print $1}' | tail -1")
+  call system("touch .codellama.stop")
+  echo "killed \n"
   let s:stopped = 1
 endfunction
 

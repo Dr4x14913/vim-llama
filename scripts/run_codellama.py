@@ -1,8 +1,10 @@
 #! /usr/bin/python3
-from os import system
+from os import system, getpid, fork, waitpid, WNOHANG, path, kill
 from sys import argv
 import json
 from subprocess import Popen, PIPE, STDOUT
+from time import sleep
+from subprocess import Popen, PIPE
 
 with open('.codellama.ctx', 'r') as f:
   prompt = f.read()
@@ -15,8 +17,21 @@ curl_dict = {
   'prompt': prompt
 }
 
-cmd = "curl -X POST http://localhost:11434/api/generate -d '" + json.dumps(curl_dict) + "'"
-print(cmd)
-system('rm -f .codellama.stopped')
-system('docker start ollama')
-system(cmd + " > .codellama.resp")
+cmd = ["curl -X POST http://localhost:11434/api/generate -d \'"+json.dumps(curl_dict)+"\' 2>/dev/null"]
+system('rm -f .codellama.stop')
+system('rm -f .codellama.resp && touch .codellama.resp')
+system('docker start ollama > /dev/null')
+
+proc = Popen(cmd, shell=True, stdout=PIPE)
+pid  = proc.pid
+while proc.poll() is None:
+    if path.isfile(".codellama.stop"):
+        proc.kill()
+        system(f"kill -9 {pid + 1}")
+
+    line = proc.stdout.readline()
+    print("test",line.rstrip())
+    if not line:
+        break
+    with open(".codellama.resp", "a") as f:
+        f.write(line.decode('utf-8'))
