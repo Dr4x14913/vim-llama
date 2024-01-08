@@ -1,5 +1,4 @@
-
-function! codellama#Start()
+function! vim_llama#Start()
 
   let s:cur_buf                 = bufnr("%")
   call bufload      (s:cur_buf)
@@ -8,34 +7,34 @@ function! codellama#Start()
   let s:last_ended              = line(".")
   let s:last_timecode           = 0
   let s:stopped                 = 0
-  let s:context                 = join(getline(Max(line(".") - g:codellama_context_size, 1), line(".")), "\n")
-  let s:run_script              = "~/projects/vim-llama/scripts/run_codellama.py"
+  let s:context                 = join(getline(Max(line(".") - g:vim_llama_context_size, 1), line(".")), "\n")
+  let s:run_script              = "~/projects/vim-llama/scripts/run_ollama.py"
   let cmd                       = s:run_script . " &"
 
   if filereadable(expand(s:run_script)) == 0
-    echo "Cant find run_codellama.py script in " . s:run_script
+    echo "Cant find run script at " . s:run_script
     return
   endif
 
-  call system("echo '" . s:context . "' > .codellama.ctx")
-  call system("echo '" . cmd . "' > .codellama.cmd")
+  call system("echo '" . s:context . "' > .vimllama.ctx")
+  call system("echo '" . cmd . "' > .vimllama.cmd")
   call system(cmd)
-  call timer_start(1000, 'codellama#Fetch')
+  call timer_start(1000, 'vim_llama#Fetch')
 endfunction
 
 " Fetch function that gathers responses and render text
-function! codellama#Fetch(timer)
+function! vim_llama#Fetch(timer)
   echo "fetching " . s:last_timecode
   " Only if normal mode
   if mode() != "n"
     if s:stopped == 0
-      call timer_start(1000, 'codellama#Fetch')
+      call timer_start(1000, 'vim_llama#Fetch')
     endif
     return
   endif
 
   " Gather each response from the out file
-  let res           = readfile(".codellama.resp")
+  let res           = readfile(".vimllama.resp")
   let string_to_add = ""
   let s:register    = 0
   for j in res
@@ -82,14 +81,14 @@ function! codellama#Fetch(timer)
   endif
 
   if s:stopped == 0
-    call timer_start(100, 'codellama#Fetch')
+    call timer_start(100, 'vim_llama#Fetch')
   endif
 endfunction
 
-function! codellama#Stop()
+function! vim_llama#Stop()
   "let s:pid = system("ps x | grep codellama | grep -v grep | awk -F' ' '{print $1}' | tail -1")
   "echo "killed \n"
-  call system("touch .codellama.stop")
+  call system("touch .vimllama.stop")
   let s:stopped = 1
 endfunction
 
