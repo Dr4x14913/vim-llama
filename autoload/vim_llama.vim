@@ -9,7 +9,7 @@ function! vim_llama#Start()
   let s:stopped                 = 0
   let s:context                 = join(getline(Max(line(".") - g:vim_llama_context_size, 1), line(".")), "\n")
   let s:run_script              = "~/projects/vim-llama/scripts/run_ollama.py"
-  let cmd                       = s:run_script . " &"
+  let cmd                       = s:run_script . " " . g:vim_llama_model . " &"
 
   if filereadable(expand(s:run_script)) == 0
     echo "Cant find run script at " . s:run_script
