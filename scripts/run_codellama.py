@@ -17,7 +17,7 @@ curl_dict = {
   'prompt': prompt
 }
 
-cmd = ["curl -X POST http://localhost:11434/api/generate -d \'"+json.dumps(curl_dict)+"\' 2>/dev/null"]
+cmd = ["curl --no-buffer -X POST http://localhost:11434/api/generate -d \'"+json.dumps(curl_dict)+"\' 2>/dev/null"]
 system('rm -f .codellama.stop')
 system('rm -f .codellama.resp && touch .codellama.resp')
 system('docker start ollama > /dev/null')

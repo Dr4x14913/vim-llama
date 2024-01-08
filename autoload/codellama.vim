@@ -1,10 +1,13 @@
 
 function! codellama#Start()
+  call NewEmptyLine()
+
   let s:start_line              = line(".")
-  let s:last_timecode           = 0
   let s:last_ended              = line(".")
+  let s:cur_buf                 = bufnr("%")
+  let s:last_timecode           = 0
   let s:stopped                 = 0
-  let context                   = join(getline(Max(line(".") - g:codellama_context_size, 2), line(".")), "\n")
+  let context                   = join(getline(Max(line(".") - g:codellama_context_size, 1), line(".")), "\n")
   let s:run_script              = "~/projects/vim-llama/scripts/run_codellama.py"
   let cmd                       = s:run_script . " &"
 
@@ -20,7 +23,7 @@ function! codellama#Start()
 endfunction
 
 function! codellama#Fetch(timer)
-  echo "fetching" . s:last_timecode
+  echo "fetching " . s:last_timecode
   "only if normal mode
   if mode() != "n"
     if s:stopped == 0
@@ -43,7 +46,7 @@ function! codellama#Fetch(timer)
     if s:done
       let s:stopped = 1
     endif
-    if s:last_ended == s:start_line
+    if s:last_timecode == 0
       let s:register = 1
     endif
     if s:register == 1
@@ -55,12 +58,19 @@ function! codellama#Fetch(timer)
     endif
   endfor
 
-  for line in split(string_to_add, "\n")
-    call cursor(s:last_ended, 0)
-    exec "normal! o<ESC>"
-    call setline(line("."), line)
-    let s:last_ended = s:last_ended + 1
-  endfor
+  if len(string_to_add) > 0
+    call bufload(s:cur_buf)
+    let s:first = 1
+    for line in split(string_to_add, "\n", 1)
+      if s:first == 1
+        let s:first = 0
+        call setbufline(s:cur_buf, s:last_ended, getbufline(s:cur_buf, s:last_ended)[0] . line)
+      else
+        call appendbufline(s:cur_buf, s:last_ended, line)
+        let s:last_ended = s:last_ended + 1
+    endif
+    endfor
+  endif
 
   if s:stopped == 0
     call timer_start(500, 'codellama#Fetch')
@@ -82,4 +92,7 @@ function! Min(a,b)
   return a:a < a:b ? a:a : a:b
 endfunction
 
-
+function! NewEmptyLine()
+  call append(line("."), "")
+  call cursor(line(".") + 1, 0)
+endfunction
