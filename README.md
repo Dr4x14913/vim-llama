@@ -19,19 +19,19 @@ And the run it on the port `11434` in a container named `ollama`:
 ## vimplug plugin
 
 Open your `.vimrc` file and add the following code between the `call plug#begin('~/.vim/plugged')` and `call plug#end()` statements:
-    
+
     Plug 'Dr4x14913/vim-llama'
 
 Then open vim and run:
 
     :PlugInstall
 
-To run it you have to use the `VLMAStart` command. The `VLMAStop` command will kill the running process. 
+To run it you have to use the `VLMAStart` command. The `VLMAStop` command will kill the running process.
 
 # Configuration
 You can tune the following variables:
 
-| Name | Default value | What this is | 
+| Name | Default value | What this is |
 |------|:-------------:|-----------------|
 | g:vim_llama_context_size | 20 | Size of the context window: number of lines above your cursor that will be taken into account when start function is called. If you are in v mode, only selected lines will be taken into account. |
-| g:vim_llama_model | codellama | Model that you want to use (ex: llama2, codellama:pyhton ...) |
+| g:vim_llama_model | codellama | Model that you want to use (ex: llama2, codellama:python ...) |
