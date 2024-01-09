@@ -1,5 +1,8 @@
 function! vim_llama#Start(isrange, lstart, lend)
 
+  let s:additional_prompt_0 = "Continue the following code:\n```"
+  let s:additional_prompt_1 = "\n```\nOutput the code between ``` and ``` quotes."
+
   let s:cur_buf                 = bufnr("%")
   call bufload      (s:cur_buf)
   call appendbufline(s:cur_buf, a:lend, "")
@@ -22,10 +25,12 @@ function! vim_llama#Start(isrange, lstart, lend)
     return
   endif
 
-  call system("echo '" . s:context . "' > .vimllama.ctx")
+  call system("echo '" . s:additional_prompt_0 . "' > .vimllama.ctx")
+  call system("echo '" . s:context . "' >> .vimllama.ctx")
+  call system("echo '" . s:additional_prompt_1 . "' >> .vimllama.ctx")
   call system("echo '" . cmd . "' > .vimllama.cmd")
   call system(cmd)
-  call timer_start(1000, 'vim_llama#Fetch')
+  call timer_start(5000, 'vim_llama#Fetch')
 endfunction
 
 " Fetch function that gathers responses and render text
