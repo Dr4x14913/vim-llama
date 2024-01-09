@@ -1,8 +1,9 @@
 #! /usr/bin/python3
 import json
-from os import system, path
+from os import system, path, kill
+from signal import SIGKILL
 from sys import argv
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, run
 
 with open('.vimllama.ctx', 'r') as f:
   prompt = f.read()
@@ -21,16 +22,20 @@ system('rm -f .vimllama.resp && touch .vimllama.resp')
 system('docker start ollama > /dev/null')
 
 proc = Popen(cmd, shell=True, stdout=PIPE)
-pid  = proc.pid
+ppid  = proc.pid
+pids = run(["pgrep", "-P", f"{ppid}"], capture_output=True).stdout.decode('utf-8').split('\n')[:-1]
+
 while proc.poll() is None:
     if path.isfile(".vimllama.stop"):
         proc.kill()
-        system(f"kill -9 {pid + 1}")
+        for pid in pids:
+            kill(int(pid), SIGKILL)
 
     line = proc.stdout.readline()
-    print("test",line.rstrip())
+    print(line.rstrip())
     if not line:
         break
+
     with open(".vimllama.resp", "a") as f:
         f.write(line.decode('utf-8'))
 
