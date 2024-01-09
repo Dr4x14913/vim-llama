@@ -33,5 +33,5 @@ You can tune the following variables:
 
 | Name | Default value | What this is | 
 |------|:-------------:|-----------------|
-| g:vim_llama_context_size | 20 | Size of the context window (number of line above your cursor when start function is called) |
+| g:vim_llama_context_size | 20 | Size of the context window: number of lines above your cursor that will be taken into account when start function is called. If you are in v mode, only selected lines will be taken into account. |
 | g:vim_llama_model | codellama | Model that you want to use (ex: llama2, codellama:pyhton ...) |

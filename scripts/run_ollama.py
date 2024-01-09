@@ -33,3 +33,4 @@ while proc.poll() is None:
         break
     with open(".vimllama.resp", "a") as f:
         f.write(line.decode('utf-8'))
+

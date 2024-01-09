@@ -13,6 +13,6 @@ endif
 
 
 
-command! -nargs=0 VLMAStart call vim_llama#Start()
+command! -range VLMAStart call vim_llama#Start(<range>,<line1>, <line2>)
 command! -nargs=0 VLMAFetch call vim_llama#Fetch()
 command! -nargs=0 VLMAStop call vim_llama#Stop()

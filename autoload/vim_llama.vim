@@ -1,13 +1,19 @@
-function! vim_llama#Start()
+function! vim_llama#Start(isrange, lstart, lend)
 
   let s:cur_buf                 = bufnr("%")
   call bufload      (s:cur_buf)
-  call appendbufline(s:cur_buf, line("."), "")
+  call appendbufline(s:cur_buf, a:lend, "")
 
-  let s:last_ended              = line(".")
+  if a:isrange == 0
+    let s:lstart = Max(1, a:lend - g:vim_llama_context_size)
+  else
+    let s:lstart = a:lstart
+  endif
+
+  let s:context                 = join(getbufline(s:cur_buf, s:lstart, a:lend), "\n")
+  let s:last_ended              = a:lend + 1
   let s:last_timecode           = 0
   let s:stopped                 = 0
-  let s:context                 = join(getline(Max(line(".") - g:vim_llama_context_size, 1), line(".")), "\n")
   let s:run_script              = "~/projects/vim-llama/scripts/run_ollama.py"
   let cmd                       = s:run_script . " " . g:vim_llama_model . " &"
 
