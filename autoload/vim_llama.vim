@@ -28,7 +28,9 @@ function! vim_llama#Start(isrange, lstart, lend, ...)
   let s:last_timecode           = 0
   let s:stopped                 = 0
   let s:run_script              = "~/projects/vim-llama/scripts/run_ollama.py"
-  let cmd                       = s:run_script . " " . g:vim_llama_model . " &"
+  let cmd                       = s:run_script . " --model " . g:vim_llama_model
+  let cmd                       = cmd          . " --ip "    . g:vim_llama_ip
+  let cmd                       = cmd          . " --port "  . g:vim_llama_port . " &"
 
   if filereadable(expand(s:run_script)) == 0
     echo "Cant find run script at " . s:run_script

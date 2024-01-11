@@ -11,6 +11,13 @@ if ! exists("g:vim_llama_model")
   let g:vim_llama_model = "codellama"
 endif
 
+if ! exists("g:vim_llama_ip")
+  let g:vim_llama_ip = "localhost"
+endif
+
+if ! exists("g:vim_llama_port")
+  let g:vim_llama_port = "11434"
+endif
 
 
 command! -nargs=* -range VLMAStart call vim_llama#Start(<range>,<line1>, <line2>, <q-args>)

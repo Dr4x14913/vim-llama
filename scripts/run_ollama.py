@@ -4,19 +4,22 @@ from os import system, path, kill
 from signal import SIGKILL
 from sys import argv
 from subprocess import Popen, PIPE, run
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--model', type=str, default="codellama:latest")
+parser.add_argument('--ip', type=str, default="localhost")
+parser.add_argument('--port', type=str, default="11434")
+args = parser.parse_args()
 
 with open('.vimllama.ctx', 'r') as f:
   prompt = f.read()
-model = "codellama"
-if len(argv) >= 2:
-  model = argv[1]
 
 curl_dict = {
-  'model': model,
+  'model': args.model,
   'prompt': prompt
 }
-
-cmd = ["curl --no-buffer -X POST http://localhost:11434/api/generate -d \'"+json.dumps(curl_dict)+"\' 2>/dev/null"]
+cmd = [f"curl --no-buffer -X POST http://{args.ip}:{args.port}/api/generate -d \'"+json.dumps(curl_dict)+"\' 2>/dev/null"]
 system('rm -f .vimllama.stop')
 system('rm -f .vimllama.resp && touch .vimllama.resp')
 system('docker start ollama > /dev/null')
