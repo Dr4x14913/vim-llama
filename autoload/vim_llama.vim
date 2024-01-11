@@ -1,7 +1,17 @@
-function! vim_llama#Start(isrange, lstart, lend)
+function! vim_llama#Start(isrange, lstart, lend, ...)
 
-  let s:additional_prompt_0 = "Continue the following code:\n```"
-  let s:additional_prompt_1 = "\n```\nOutput the code between ``` and ``` quotes."
+  let s:additional_prompts = split(a:1, ",")
+  if len(s:additional_prompts) >= 1
+    let s:additional_prompt_0 = s:additional_prompts[0] . "\n```"
+    if len(s:additional_prompts) >= 2
+      let s:additional_prompt_1 = "\n```\n" . s:additional_prompts[1]
+    else
+      let s:additional_prompt_1 = "\n```\nOutput the code between ``` and ``` quotes."
+    endif
+  else
+      let s:additional_prompt_1 = "\n```\nOutput the code between ``` and ``` quotes."
+      let s:additional_prompt_0 = "Continue the following code:\n```"
+  endif
 
   let s:cur_buf                 = bufnr("%")
   call bufload      (s:cur_buf)
