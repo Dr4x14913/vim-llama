@@ -35,3 +35,5 @@ You can tune the following variables:
 |------|:-------------:|-----------------|
 | g:vim_llama_context_size | 20 | Size of the context window: number of lines above your cursor that will be taken into account when start function is called. If you are in v mode, only selected lines will be taken into account. |
 | g:vim_llama_model | codellama | Model that you want to use (ex: llama2, codellama:python ...) |
+
+> Note that you will have to pull the model you want to use using the `VLMAPull <model>` command before using it or an error will be thrown.
