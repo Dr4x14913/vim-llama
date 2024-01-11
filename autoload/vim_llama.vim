@@ -68,6 +68,11 @@ function! vim_llama#Fetch(timer)
     catch
       break
     endtry
+    if len(get(obj, "error")) > 1
+      echo "Error: " . get(obj, "error")
+      let s:stopped = 1
+      break
+    endif
     let s:timecode = get(obj, "created_at")
     if get(obj, "done")
       let s:stopped = 1
@@ -113,6 +118,15 @@ function! vim_llama#Stop()
   "echo "killed \n"
   call system("touch .vimllama.stop")
   let s:stopped = 1
+endfunction
+
+function! vim_llama#Pull(model)
+  let json = {"name": a:model}
+  let cmd = "curl -X POST http://" . g:vim_llama_ip . ":" . g:vim_llama_port . "/api/pull -d '" . json_encode(json) . "'"
+  echo cmd
+  echo "It may took some time..."
+  call system(cmd)
+  echo "Done!"
 endfunction
 
 function! Max(a,b)
