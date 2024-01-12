@@ -15,6 +15,7 @@ And the run it on the port `11434` in a container named `ollama`:
 
     docker run -d -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama
 
+> Note that you will have to pull the model you want to use using the `VLMAPull <model>` command before using it or an error will be thrown.
 
 ## vimplug plugin
 
@@ -35,5 +36,27 @@ You can tune the following variables:
 |------|:-------------:|-----------------|
 | g:vim_llama_context_size | 20 | Size of the context window: number of lines above your cursor that will be taken into account when start function is called. If you are in v mode, only selected lines will be taken into account. |
 | g:vim_llama_model | codellama | Model that you want to use (ex: llama2, codellama:python ...) |
+| g:vim_llama_ip | localhost | IP address of the Llama server |
+| g:vim_llama_port | 11434 | Port number for the Llama server |
 
-> Note that you will have to pull the model you want to use using the `VLMAPull <model>` command before using it or an error will be thrown.
+# Use it
+
+You can type `:VLMAStart` command and the model will continue your code based on the `g:vim_llama_context_size` lines before the one you are on at this time. \
+You can alose type this command in visual mode, in this case, only the selected lines will be passed to the model.
+
+The default behaviour of the model will be to continue your code, if you want to do different stuff, you can run:
+
+    :VLMAStart <Begining instructions>, <End instructions>
+This will prompt:
+
+    <Begining instructions>
+    ```
+    # Lines that you selected in visual mode 
+    # or lines that are in the context window
+    ```
+    <End insructions>
+
+
+
+
+

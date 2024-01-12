@@ -24,6 +24,5 @@ if ! exists("g:vim_llama_run_script")
 endif
 
 command! -nargs=* -range VLMAStart call vim_llama#Start(<range>,<line1>, <line2>, <q-args>)
-command! -nargs=0 VLMAFetch call vim_llama#Fetch()
 command! -nargs=0 VLMAStop call vim_llama#Stop()
 command! -nargs=1 VLMAPull call vim_llama#Pull(<f-args>)
