@@ -19,6 +19,9 @@ if ! exists("g:vim_llama_port")
   let g:vim_llama_port = "11434"
 endif
 
+if ! exists("g:vim_llama_run_script")
+  let g:vim_llama_run_script = expand("<sfile>:p:h:h") . "/scripts/run_ollama.py"
+endif
 
 command! -nargs=* -range VLMAStart call vim_llama#Start(<range>,<line1>, <line2>, <q-args>)
 command! -nargs=0 VLMAFetch call vim_llama#Fetch()
