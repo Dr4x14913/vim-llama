@@ -121,11 +121,42 @@ endfunction
 
 function! vim_llama#Pull(model)
   let json = {"name": a:model}
-  let cmd = "curl -X POST http://" . g:vim_llama_ip . ":" . g:vim_llama_port . "/api/pull -d '" . json_encode(json) . "'"
+  let cmd = "curl -X POST http://" . g:vim_llama_ip . ":" . g:vim_llama_port . "/api/pull -d '" . json_encode(json) . "' > .vimllama.pull &"
   echo cmd
   echo "It may took some time..."
   call system(cmd)
-  echo "Done!"
+  call timer_start(2500, 'vim_llama#FetchPull')
+endfunction
+
+function! vim_llama#FetchPull(timer)
+  " Gather each response from the out file
+  let file = readfile(".vimllama.pull")
+  try
+    let res = file[-1]
+    let obj = json_decode(res)
+  catch
+    try
+      let res = file[-2]
+      let obj = json_decode(res)
+    catch
+      call timer_start(1000, 'vim_llama#FetchPull')
+      return
+    endtry
+  endtry
+
+  if get(obj, "status") == "success"
+    echo "Done"
+    return
+  endif
+
+  if len(get(obj, "error")) > 1
+    echo "Error: " . get(obj, "error")
+    return
+  endif
+
+  echo get(obj, "status") . " (" . get(obj, "completed"). ")"
+
+  call timer_start(200, 'vim_llama#FetchPull')
 endfunction
 
 function! Max(a,b)
