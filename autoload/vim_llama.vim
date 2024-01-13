@@ -1,5 +1,7 @@
+
 function! vim_llama#Start(isrange, lstart, lend, ...)
 
+  " Argument handing
   let s:additional_prompts = split(a:1, ",")
   if len(s:additional_prompts) >= 1
     let s:additional_prompt_0 = s:additional_prompts[0] . "\n```"
@@ -12,6 +14,13 @@ function! vim_llama#Start(isrange, lstart, lend, ...)
       let s:additional_prompt_1 = "\n```\nOutput the code between ``` and ``` quotes."
       let s:additional_prompt_0 = "Continue the following code:\n```"
   endif
+
+  " Generate a random id
+  let s:id = "vimllama" . matchstr(getcwd(), '\d\+$') . "-" . strftime("%Y%m%d-%H%M%S")
+
+  " Create a tmp folder in /tmp named as s:id
+  let s:tmp_path = "/tmp/" . s:id
+  call system("mkdir -p " . s:tmp_path)
 
   let s:cur_buf                 = bufnr("%")
   call bufload      (s:cur_buf)
@@ -28,6 +37,7 @@ function! vim_llama#Start(isrange, lstart, lend, ...)
   let s:last_timecode           = 0
   let s:stopped                 = 0
   let cmd                       = g:vim_llama_run_script . " --model " . g:vim_llama_model
+  let cmd                       = cmd          . " --path "  . s:tmp_path
   let cmd                       = cmd          . " --ip "    . g:vim_llama_ip
   let cmd                       = cmd          . " --port "  . g:vim_llama_port . " &"
 
@@ -36,27 +46,35 @@ function! vim_llama#Start(isrange, lstart, lend, ...)
     return
   endif
 
-  call system("echo '" . s:additional_prompt_0 . "' > .vimllama.ctx")
-  call system("echo '" . s:context . "' >> .vimllama.ctx")
-  call system("echo '" . s:additional_prompt_1 . "' >> .vimllama.ctx")
-  call system("echo '" . cmd . "' > .vimllama.cmd")
+  call system("echo '" . s:additional_prompt_0 . "' > " . s:tmp_path . "/.vimllama.ctx")
+  call system("echo '" . s:context . "' >> " . s:tmp_path . "/.vimllama.ctx")
+  call system("echo '" . s:additional_prompt_1 . "' >> " . s:tmp_path . "/.vimllama.ctx")
+  call system("echo '" . cmd . "' > " . s:tmp_path . "/.vimllama.cmd")
   call system(cmd)
-  call timer_start(5000, 'vim_llama#Fetch')
+  call timer_start(2000, 'vim_llama#Fetch')
 endfunction
 
 " Fetch function that gathers responses and render text
 function! vim_llama#Fetch(timer)
-  echo "fetching " . s:last_timecode
+  let s:refresh_time = 200
+
   " Only if normal mode
   if mode() != "n"
     if s:stopped == 0
-      call timer_start(1000, 'vim_llama#Fetch')
+      call timer_start(s:refresh_time, 'vim_llama#Fetch')
     endif
     return
   endif
 
+  if s:stopped
+    echo "vim-llama run ended"
+    return
+  else
+    echo "fetched " . s:last_timecode
+  endif
+
   " Gather each response from the out file
-  let res           = readfile(".vimllama.resp")
+  let res           = readfile("" . s:tmp_path . "/.vimllama.resp")
   let string_to_add = ""
   let s:register    = 0
   for j in res
@@ -107,21 +125,19 @@ function! vim_llama#Fetch(timer)
     endfor
   endif
 
-  if s:stopped == 0
-    call timer_start(100, 'vim_llama#Fetch')
-  endif
+  call timer_start(s:refresh_time, 'vim_llama#Fetch')
 endfunction
 
 function! vim_llama#Stop()
   "let s:pid = system("ps x | grep codellama | grep -v grep | awk -F' ' '{print $1}' | tail -1")
   "echo "killed \n"
-  call system("touch .vimllama.stop")
+  call system("touch " . s:tmp_path . "/.vimllama.stop")
   let s:stopped = 1
 endfunction
 
 function! vim_llama#Pull(model)
   let json = {"name": a:model}
-  let cmd = "curl -X POST http://" . g:vim_llama_ip . ":" . g:vim_llama_port . "/api/pull -d '" . json_encode(json) . "' > .vimllama.pull &"
+  let cmd = "curl -X POST http://" . g:vim_llama_ip . ":" . g:vim_llama_port . "/api/pull -d '" . json_encode(json) . "' > " . s:tmp_path . "/.vimllama.pull &"
   echo cmd
   echo "It may took some time..."
   call system(cmd)
@@ -130,7 +146,7 @@ endfunction
 
 function! vim_llama#FetchPull(timer)
   " Gather each response from the out file
-  let file = readfile(".vimllama.pull")
+  let file = readfile(s:tmp_path . "/.vimllama.pull")
   try
     let res = file[-1]
     let obj = json_decode(res)
