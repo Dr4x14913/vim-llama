@@ -1,7 +1,20 @@
 
 function! vim_llama#Start(isrange, lstart, lend, ...)
 
-  " Argument handing
+  " Loading current buffer
+  let s:cur_buf                 = bufnr("%")
+  call bufload      (s:cur_buf)
+  call appendbufline(s:cur_buf, a:lend, "")
+
+  " Init variable before run
+  let s:lstart        = (a:isrange == 0 ? Max(1, a:lend - g:vim_llama_context_size) : a:lstart)
+  let s:context       = join(getbufline(s:cur_buf, s:lstart, a:lend), "\n")
+  let s:last_ended    = a:lend + 1
+  let s:last_timecode = 0
+  let s:stopped       = 0
+  let s:log           = []
+
+  " Last argument handing
   let s:additional_prompts = split(a:1, ",")
   if len(s:additional_prompts) >= 1
     let s:additional_prompt_0 = s:additional_prompts[0] . "\n```"
@@ -17,29 +30,21 @@ function! vim_llama#Start(isrange, lstart, lend, ...)
 
   " Generate a random id
   let s:id = "vimllama" . matchstr(getcwd(), '\d\+$') . "-" . strftime("%Y%m%d-%H%M%S")
+  call vim_llama#Log("Run id is: " . s:id)
 
   " Create a tmp folder in /tmp named as s:id
   let s:tmp_path = "/tmp/" . s:id
   call system("mkdir -p " . s:tmp_path)
+  call vim_llama#Log("Work dir is: " . s:tmp_path)
 
-  let s:cur_buf                 = bufnr("%")
-  call bufload      (s:cur_buf)
-  call appendbufline(s:cur_buf, a:lend, "")
 
-  if a:isrange == 0
-    let s:lstart = Max(1, a:lend - g:vim_llama_context_size)
-  else
-    let s:lstart = a:lstart
-  endif
-
-  let s:context                 = join(getbufline(s:cur_buf, s:lstart, a:lend), "\n")
-  let s:last_ended              = a:lend + 1
-  let s:last_timecode           = 0
-  let s:stopped                 = 0
+  " Building system command
   let cmd                       = g:vim_llama_run_script . " --model " . g:vim_llama_model
   let cmd                       = cmd          . " --path "  . s:tmp_path
   let cmd                       = cmd          . " --ip "    . g:vim_llama_ip
   let cmd                       = cmd          . " --port "  . g:vim_llama_port . " &"
+  call vim_llama#Log("Command to be run: " . cmd)
+
 
   if filereadable(expand(g:vim_llama_run_script)) == 0
     echo "Cant find run script at " . s:run_script
@@ -173,6 +178,28 @@ function! vim_llama#FetchPull(timer)
   echo get(obj, "status") . " (" . get(obj, "completed"). ")"
 
   call timer_start(200, 'vim_llama#FetchPull')
+endfunction
+
+" Log function with time stamp that add a line to the s:log variable
+function! vim_llama#Log(log_msg)
+  let current_time = strftime("%H:%M:%S")
+  call add(s:log, '[' . current_time . '] ' . a:log_msg)
+endfunction
+
+" function that open a new splited readonly vim buffer and display the s:log list
+function! vim_llama#DisplayLogs()
+  let l:bufname = "vimllama_logs"
+  if bufexists(l:bufname)
+    execute 'bw ' . l:bufname
+  endif
+  execute 'silent split ' . l:bufname
+  setlocal bufhidden=hide
+  setlocal buftype=nofile
+  setlocal noswapfile
+
+  let s:log = get(s:, 'log', [])
+  call append(0, s:log)
+  setlocal nomodifiable
 endfunction
 
 function! Max(a,b)

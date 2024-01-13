@@ -27,7 +27,6 @@ Then open vim and run:
 
     :PlugInstall
 
-To run it you have to use the `VLMAStart` command. The `VLMAStop` command will kill the running process.
 
 # Configuration
 You can tune the following variables:
@@ -51,12 +50,19 @@ This will prompt:
 
     <Begining instructions>
     ```
-    # Lines that you selected in visual mode 
+    # Lines that you selected in visual mode
     # or lines that are in the context window
     ```
     <End insructions>
 
+## Available commands
 
+| Command name | Option | Behaviour |
+|--------------|--------|-----------|
+| VLMAStart    | [\<range>], [\<prompt start>], [\<prompt end>]  | Starts the completion as explained above. |
+| VLMAStop     | -      | Stops a running completion process. |
+| VLMAPull     | model  | Pulls an ollama model. |
+| VLMALogs     | -      | Displays the logs of the last completion. |
 
 
 
