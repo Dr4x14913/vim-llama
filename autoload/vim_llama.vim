@@ -12,11 +12,13 @@ function! vim_llama#Start(isrange, lstart, lend, ...)
   let s:last_ended    = a:lend + 1
   let s:last_timecode = 0
   let s:stopped       = 0
-  let s:log           = []
+  let s:log = get(s:, 'log', [])
+  let s:only_code     = 1
 
   " Last argument handing
   let s:additional_prompts = split(a:1, ",")
   if len(s:additional_prompts) >= 1
+    let s:only_code           = 0 " Base prompt is changed, output everything
     let s:additional_prompt_0 = s:additional_prompts[0] . "\n```"
     if len(s:additional_prompts) >= 2
       let s:additional_prompt_1 = "\n```\n" . s:additional_prompts[1]
@@ -24,13 +26,14 @@ function! vim_llama#Start(isrange, lstart, lend, ...)
       let s:additional_prompt_1 = "\n```\nOutput the code between ``` and ``` quotes."
     endif
   else
-      let s:additional_prompt_1 = "\n```\nOutput the code between ``` and ``` quotes."
       let s:additional_prompt_0 = "Continue the following code:\n```"
+      let s:additional_prompt_1 = "\n```\nOutput the code between ``` and ``` quotes."
   endif
 
   " Generate a random id
   let s:id = "vimllama" . matchstr(getcwd(), '\d\+$') . "-" . strftime("%Y%m%d-%H%M%S")
   call vim_llama#Log("Run id is: " . s:id)
+  call vim_llama#Log("Only output what's inside ``` quotes: " . s:only_code)
 
   " Create a tmp folder in /tmp named as s:id
   let s:tmp_path = "/tmp/" . s:id
@@ -73,6 +76,8 @@ function! vim_llama#Fetch(timer)
 
   if s:stopped
     echo "vim-llama run ended"
+    call vim_llama#Log("Run " . s:id . " has finished")
+    call vim_llama#Log("")
     return
   else
     echo "fetched " . s:last_timecode
@@ -82,6 +87,7 @@ function! vim_llama#Fetch(timer)
   let res           = readfile("" . s:tmp_path . "/.vimllama.resp")
   let string_to_add = ""
   let s:register    = 0
+  let s:is_between_quotes = 0 " Only used when s:only_code
   for j in res
     " If json not complete, stop parsing, it mean that we've reached the end
     " of the file for now
@@ -90,24 +96,46 @@ function! vim_llama#Fetch(timer)
     catch
       break
     endtry
+
+    " If errored
     if len(get(obj, "error")) > 1
       echo "Error: " . get(obj, "error")
       let s:stopped = 1
       break
     endif
+
+    " If ollama is done
     let s:timecode = get(obj, "created_at")
     if get(obj, "done")
       let s:stopped = 1
     endif
+
+    " If its the begining
     if s:last_timecode == 0
       let s:register = 1
     endif
+
+    " If only_code then only dislay what's inside ``` quotes
+    if s:only_code == 1 && get(obj, "response") == "```" && s:is_between_quotes == 1
+      let s:stopped = 1
+      break
+    end
+    if s:only_code == 1 && s:is_between_quotes == 0
+      let s:register = 0
+    endif
+
+    " Gather all the new responses
     if s:register == 1
       let string_to_add = string_to_add . get(obj, "response")
       let s:last_timecode = s:timecode
     endif
+
     if s:timecode == s:last_timecode
       let s:register = 1
+    endif
+
+    if s:only_code == 1 && get(obj, "response") == "```" && s:is_between_quotes == 0
+      let s:is_between_quotes = 1
     endif
   endfor
 
