@@ -4,7 +4,6 @@ function! vim_llama#Start(isrange, lstart, lend, ...)
   " Loading current buffer
   let s:cur_buf                 = bufnr("%")
   call bufload      (s:cur_buf)
-  call appendbufline(s:cur_buf, a:lend, "")
 
   " Init variable before run
   let s:lstart        = (a:isrange == 0 ? Max(1, a:lend - g:vim_llama_context_size) : a:lstart)
@@ -26,7 +25,7 @@ function! vim_llama#Start(isrange, lstart, lend, ...)
       let s:additional_prompt_1 = "\n```\nOutput the code between ``` and ``` quotes."
     endif
   else
-      let s:additional_prompt_0 = "Continue the following code:\n```"
+      let s:additional_prompt_0 = "Guess what would follow based on this code:\n```"
       let s:additional_prompt_1 = "\n```\nOutput the code between ``` and ``` quotes."
   endif
 
