@@ -26,9 +26,10 @@ function! vim_llama#Start(isrange, lstart, lend, ...)
       let s:additional_prompt_1 = "\n```\nOutput the code between ``` and ``` quotes."
     endif
   else
-      let s:additional_prompt_0 = "Guess what would follow based on this code:\n```"
+      let s:additional_prompt_0 = "Continue this code from where it stopped:\n```"
       let s:additional_prompt_1 = "\n```\nOutput the code between ``` and ``` quotes."
   endif
+  let s:prompt = s:additional_prompt_0 . "\n" . s:context . "\n" . s:additional_prompt_1
 
   " Generate a random id
   let s:id = "vimllama" . matchstr(getcwd(), '\d\+$') . "-" . strftime("%Y%m%d-%H%M%S")
@@ -47,6 +48,7 @@ function! vim_llama#Start(isrange, lstart, lend, ...)
   let cmd                       = cmd          . " --ip "    . g:vim_llama_ip
   let cmd                       = cmd          . " --port "  . g:vim_llama_port . " &"
   call vim_llama#Log("Command to be run: " . cmd)
+  call vim_llama#Log("Prompt is:\n". s:prompt)
 
 
   if filereadable(expand(g:vim_llama_run_script)) == 0
@@ -54,9 +56,7 @@ function! vim_llama#Start(isrange, lstart, lend, ...)
     return
   endif
 
-  call system("echo '" . s:additional_prompt_0 . "' > " . s:tmp_path . "/.vimllama.ctx")
-  call system("echo '" . s:context . "' >> " . s:tmp_path . "/.vimllama.ctx")
-  call system("echo '" . s:additional_prompt_1 . "' >> " . s:tmp_path . "/.vimllama.ctx")
+  call system("echo -e '" . s:prompt . "' > " . s:tmp_path . "/.vimllama.ctx")
   call system("echo '" . cmd . "' > " . s:tmp_path . "/.vimllama.cmd")
   call system(cmd)
   call timer_start(2000, 'vim_llama#Fetch')
@@ -77,7 +77,7 @@ function! vim_llama#Fetch(timer)
   if s:stopped
     echo "vim-llama run ended"
     call vim_llama#Log("Run " . s:id . " has finished")
-    call vim_llama#Log("")
+    call vim_llama#Log("--------------------------------")
     return
   else
     echo "fetched " . s:last_timecode
@@ -211,7 +211,10 @@ endfunction
 " Log function with time stamp that add a line to the s:log variable
 function! vim_llama#Log(log_msg)
   let current_time = strftime("%H:%M:%S")
-  call add(s:log, '[' . current_time . '] ' . a:log_msg)
+  call add(s:log, '[' . current_time . '] ' . split(a:log_msg, "\n")[0])
+  for i in split(a:log_msg, "\n")[1:-1]
+    call add(s:log, "           " . i)
+  endfor
 endfunction
 
 " function that open a new splited readonly vim buffer and display the s:log list
