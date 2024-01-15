@@ -9,7 +9,7 @@ function! TestOllamaConnection()
     echoerr "ERROR: Ping not found!"
     return 1
   endif
-  let l:output = system("curl -sL -w \"%{http_code}\" http://" . l:ip_port)
+  let l:output = system("curl --connect-timeout 2 -sL -w \"%{http_code}\" http://" . l:ip_port)
   if l:output !~# '200$'
     echomsg "Testing if ollama is reachable at " . l:ip_port
     echoerr "ERROR: IP/Port not reachable!"

@@ -4,6 +4,7 @@ function! vim_llama#Start(isrange, lstart, lend, ...)
   " Loading current buffer
   let s:cur_buf                 = bufnr("%")
   call bufload      (s:cur_buf)
+  call appendbufline(s:cur_buf, a:lend, "")
 
   " Init variable before run
   let s:lstart        = (a:isrange == 0 ? Max(1, a:lend - g:vim_llama_context_size) : a:lstart)
