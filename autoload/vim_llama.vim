@@ -1,19 +1,18 @@
 
-function! vim_llama#Start(isrange, lstart, lend, ...)
-
+function! vim_llama#StartWithCtx(isrange, lstart, lend, ...)
   " Loading current buffer
-  let s:cur_buf                 = bufnr("%")
+  let s:cur_buf = bufnr("%")
   call bufload      (s:cur_buf)
   call appendbufline(s:cur_buf, a:lend, "")
 
   " Init variable before run
   let s:lstart        = (a:isrange == 0 ? Max(1, a:lend - g:vim_llama_context_size) : a:lstart)
   let s:context       = join(getbufline(s:cur_buf, s:lstart, a:lend), "\n")
-  let s:last_ended    = a:lend + 1
+  let s:only_code     = 1
   let s:last_timecode = 0
+  let s:last_ended    = a:lend + 1
   let s:stopped       = 0
   let s:log = get(s:, 'log', [])
-  let s:only_code     = 1
 
   " Last argument handing
   let s:additional_prompts = split(a:1, ",")
@@ -29,18 +28,26 @@ function! vim_llama#Start(isrange, lstart, lend, ...)
       let s:additional_prompt_0 = "Continue this code from where it stopped:\n```"
       let s:additional_prompt_1 = "\n```\nOutput the code between ``` and ``` quotes."
   endif
-  let s:prompt = s:additional_prompt_0 . "\n" . s:context . "\n" . s:additional_prompt_1
+  call vim_llama#Log("Only output what's inside ``` quotes: " . s:only_code)
 
+  let l:prompt = s:additional_prompt_0 . "\n" . s:context . "\n" . s:additional_prompt_1
+  call vim_llama#Start(l:prompt)
+endfunction
+
+function! vim_llama#CreateTmpEnv()
   " Generate a random id
   let s:id = "vimllama" . matchstr(getcwd(), '\d\+$') . "-" . strftime("%Y%m%d-%H%M%S")
   call vim_llama#Log("Run id is: " . s:id)
-  call vim_llama#Log("Only output what's inside ``` quotes: " . s:only_code)
 
   " Create a tmp folder in /tmp named as s:id
   let s:tmp_path = "/tmp/" . s:id
   call system("mkdir -p " . s:tmp_path)
   call vim_llama#Log("Work dir is: " . s:tmp_path)
+endfunction
 
+function! vim_llama#Start(prompt)
+  " Create env for this run
+  call vim_llama#CreateTmpEnv()
 
   " Building system command
   let cmd                       = g:vim_llama_run_script . " --model " . g:vim_llama_model
@@ -48,7 +55,7 @@ function! vim_llama#Start(isrange, lstart, lend, ...)
   let cmd                       = cmd          . " --ip "    . g:vim_llama_ip
   let cmd                       = cmd          . " --port "  . g:vim_llama_port . " &"
   call vim_llama#Log("Command to be run: " . cmd)
-  call vim_llama#Log("Prompt is:\n". s:prompt)
+  call vim_llama#Log("Prompt is:\n". a:prompt)
 
 
   if filereadable(expand(g:vim_llama_run_script)) == 0
@@ -56,10 +63,18 @@ function! vim_llama#Start(isrange, lstart, lend, ...)
     return
   endif
 
-  call system("echo -e '" . s:prompt . "' > " . s:tmp_path . "/.vimllama.ctx")
+  call system("echo -e '" . a:prompt . "' > " . s:tmp_path . "/.vimllama.ctx")
   call system("echo '" . cmd . "' > " . s:tmp_path . "/.vimllama.cmd")
   call system(cmd)
   call timer_start(2000, 'vim_llama#Fetch')
+endfunction
+
+function! vim_llama#DefaultInit()
+  let s:last_timecode = 0
+  let s:last_ended    = 1
+  let s:stopped       = 0
+  let s:only_code     = 0
+  let s:log           = get(s:,"log", [])
 endfunction
 
 " Fetch function that gathers responses and render text
@@ -169,6 +184,7 @@ function! vim_llama#Stop()
 endfunction
 
 function! vim_llama#Pull(model)
+  call vim_llama#CreateTmpEnv()
   let json = {"name": a:model}
   let cmd = "curl -X POST http://" . g:vim_llama_ip . ":" . g:vim_llama_port . "/api/pull -d '" . json_encode(json) . "' > " . s:tmp_path . "/.vimllama.pull &"
   echo cmd
@@ -208,9 +224,35 @@ function! vim_llama#FetchPull(timer)
   call timer_start(200, 'vim_llama#FetchPull')
 endfunction
 
+function! vim_llama#Prompt()
+  call vim_llama#DefaultInit()
+
+  " Setup buffer
+  let l:bufname = "vimllama_prompt"
+  if bufexists(l:bufname)
+    execute 'bw ' . l:bufname
+  endif
+  execute 'botright vsplit ' . l:bufname
+  setlocal bufhidden=hide
+  setlocal buftype=nofile
+  setlocal noswapfile
+
+  " Loading current buffer
+  let s:cur_buf = bufnr("%")
+  call bufload(s:cur_buf)
+
+  " Prompt user
+  let l:user_input = input(g:vim_llama_model . '> ')
+
+  " Run model
+  call vim_llama#Start(l:user_input)
+endfunction
+
+
 " Log function with time stamp that add a line to the s:log variable
 function! vim_llama#Log(log_msg)
   let current_time = strftime("%H:%M:%S")
+  let s:log        = get(s:, 'log', [])
   call add(s:log, '[' . current_time . '] ' . split(a:log_msg, "\n")[0])
   for i in split(a:log_msg, "\n")[1:-1]
     call add(s:log, "           " . i)

@@ -51,8 +51,9 @@ endif
 
 "--- Aliases
 
-command! -nargs=* -range VLMAStart call vim_llama#Start(<range>,<line1>, <line2>, <q-args>)
+command! -nargs=* -range VLMAStart call vim_llama#StartWithCtx(<range>,<line1>, <line2>, <q-args>)
 command! -nargs=0 VLMAStop call vim_llama#Stop()
 command! -nargs=0 VLMALogs call vim_llama#DisplayLogs()
 command! -nargs=1 VLMAPull call vim_llama#Pull(<f-args>)
+command! -nargs=0 VLMAPrompt call vim_llama#Prompt()
 
