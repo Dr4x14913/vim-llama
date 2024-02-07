@@ -132,7 +132,7 @@ function! vim_llama#Fetch(timer)
 
     " If only_code then only dislay what's inside ``` quotes
     if s:only_code == 1 && get(obj, "response") == "```" && s:is_between_quotes == 1
-      let s:stopped = 1
+      call vim_llama#Stop()
       break
     end
     if s:only_code == 1 && s:is_between_quotes == 0
