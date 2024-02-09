@@ -37,6 +37,12 @@ function! vim_llama#StartWithCtx(isrange, lstart, lend, ...)
 endfunction
 
 function! vim_llama#Start(prompt)
+  " Check if model is pulled on the server
+  if vim_llama#Check_model()
+    echo "vim-llama didnt start due to previous errors"
+    return
+  endif
+
   " Create env for this run
   call vim_llama#CreateTmpEnv()
 
@@ -79,7 +85,31 @@ function! vim_llama#DefaultInit()
   let s:log           = get(s:,"log", [])
 endfunction
 
-" Fetch function that gathers responses and render text
+" function that test if the ollama model is already pulled using curl
+function! vim_llama#Check_model()
+    let l:json_string = system("curl -X GET --silent http://". g:vim_llama_ip . ":" . g:vim_llama_port ."/api/tags")
+    let l:json_object = json_decode(l:json_string)
+    let l:models = get(l:json_object, "models")
+    let l:models_name = []
+
+    for model in l:models
+      let name = get(model, "name")
+      call add(l:models_name, name)
+    endfor
+
+    if index(l:models_name, g:vim_llama_model) >= 0
+      return 0
+    else
+      echo g:vim_llama_model . " does not exist in the models list."
+      echo "Model list: " . string(l:models_name)
+      echo "Consider using one in the list or pulling it using `VLMAPull ".g:vim_llama_model."`"
+      return 1
+    endif
+endfunction
+
+"-----------------------------------------------------------------------------------------
+""-- Fetch function
+"-----------------------------------------------------------------------------------------
 function! vim_llama#Fetch(timer)
   " Fetch function that gathers responses and render text
   let s:refresh_time = 200
