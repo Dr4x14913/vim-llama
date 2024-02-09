@@ -227,6 +227,9 @@ endfunction
 function! vim_llama#Prompt()
   call vim_llama#DefaultInit()
 
+  " Prompt user
+  let l:user_input = input(g:vim_llama_model . '> ')
+
   " Setup buffer
   let l:bufname = "vimllama_prompt"
   if bufexists(l:bufname)
@@ -240,9 +243,6 @@ function! vim_llama#Prompt()
   " Loading current buffer
   let s:cur_buf = bufnr("%")
   call bufload(s:cur_buf)
-
-  " Prompt user
-  let l:user_input = input(g:vim_llama_model . '> ')
 
   " Run model
   call vim_llama#Start(l:user_input)
