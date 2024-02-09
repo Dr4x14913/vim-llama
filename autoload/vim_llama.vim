@@ -1,4 +1,6 @@
-
+"-----------------------------------------------------------------------------------------
+""-- Start functions
+"-----------------------------------------------------------------------------------------
 function! vim_llama#StartWithCtx(isrange, lstart, lend, ...)
   " Loading current buffer
   let s:cur_buf = bufnr("%")
@@ -34,17 +36,6 @@ function! vim_llama#StartWithCtx(isrange, lstart, lend, ...)
   call vim_llama#Start(l:prompt)
 endfunction
 
-function! vim_llama#CreateTmpEnv()
-  " Generate a random id
-  let s:id = "vimllama" . matchstr(getcwd(), '\d\+$') . "-" . strftime("%Y%m%d-%H%M%S")
-  call vim_llama#Log("Run id is: " . s:id)
-
-  " Create a tmp folder in /tmp named as s:id
-  let s:tmp_path = "/tmp/" . s:id
-  call system("mkdir -p " . s:tmp_path)
-  call vim_llama#Log("Work dir is: " . s:tmp_path)
-endfunction
-
 function! vim_llama#Start(prompt)
   " Create env for this run
   call vim_llama#CreateTmpEnv()
@@ -69,6 +60,17 @@ function! vim_llama#Start(prompt)
   call timer_start(2000, 'vim_llama#Fetch')
 endfunction
 
+function! vim_llama#CreateTmpEnv()
+  " Generate a random id
+  let s:id = "vimllama" . matchstr(getcwd(), '\d\+$') . "-" . strftime("%Y%m%d-%H%M%S")
+  call vim_llama#Log("Run id is: " . s:id)
+
+  " Create a tmp folder in /tmp named as s:id
+  let s:tmp_path = "/tmp/" . s:id
+  call system("mkdir -p " . s:tmp_path)
+  call vim_llama#Log("Work dir is: " . s:tmp_path)
+endfunction
+
 function! vim_llama#DefaultInit()
   let s:last_timecode = 0
   let s:last_ended    = 1
@@ -79,6 +81,7 @@ endfunction
 
 " Fetch function that gathers responses and render text
 function! vim_llama#Fetch(timer)
+  " Fetch function that gathers responses and render text
   let s:refresh_time = 200
 
   " Only if normal mode
@@ -183,6 +186,9 @@ function! vim_llama#Stop()
   let s:stopped = 1
 endfunction
 
+"-----------------------------------------------------------------------------------------
+""-- Pulling model functions
+"-----------------------------------------------------------------------------------------
 function! vim_llama#Pull(model)
   call vim_llama#CreateTmpEnv()
   let json = {"name": a:model}
@@ -248,7 +254,9 @@ function! vim_llama#Prompt()
   call vim_llama#Start(l:user_input)
 endfunction
 
-
+"-----------------------------------------------------------------------------------------
+""-- Log handling
+"-----------------------------------------------------------------------------------------
 " Log function with time stamp that add a line to the s:log variable
 function! vim_llama#Log(log_msg)
   let current_time = strftime("%H:%M:%S")
@@ -275,6 +283,9 @@ function! vim_llama#DisplayLogs()
   setlocal nomodifiable
 endfunction
 
+"-----------------------------------------------------------------------------------------
+""-- MISC
+"-----------------------------------------------------------------------------------------
 function! Max(a,b)
   return a:a > a:b ? a:a : a:b
 endfunction
