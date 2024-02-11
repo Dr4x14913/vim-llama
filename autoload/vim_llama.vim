@@ -1,5 +1,5 @@
 "-----------------------------------------------------------------------------------------
-""-- Start functions
+"-- Start functions
 "-----------------------------------------------------------------------------------------
 function! vim_llama#StartWithCtx(isrange, lstart, lend, ...)
   " Loading current buffer
@@ -108,7 +108,7 @@ function! vim_llama#Check_model()
 endfunction
 
 "-----------------------------------------------------------------------------------------
-""-- Fetch function
+"-- Fetch function
 "-----------------------------------------------------------------------------------------
 function! vim_llama#Fetch(timer)
   " Fetch function that gathers responses and render text
@@ -217,7 +217,7 @@ function! vim_llama#Stop()
 endfunction
 
 "-----------------------------------------------------------------------------------------
-""-- Pulling model functions
+"-- Pulling model functions
 "-----------------------------------------------------------------------------------------
 function! vim_llama#Pull(model)
   call vim_llama#CreateTmpEnv()
@@ -285,7 +285,7 @@ function! vim_llama#Prompt()
 endfunction
 
 "-----------------------------------------------------------------------------------------
-""-- Log handling
+"-- Log handling
 "-----------------------------------------------------------------------------------------
 " Log function with time stamp that add a line to the s:log variable
 function! vim_llama#Log(log_msg)
@@ -314,7 +314,7 @@ function! vim_llama#DisplayLogs()
 endfunction
 
 "-----------------------------------------------------------------------------------------
-""-- MISC
+"-- MISC
 "-----------------------------------------------------------------------------------------
 function! Max(a,b)
   return a:a > a:b ? a:a : a:b
