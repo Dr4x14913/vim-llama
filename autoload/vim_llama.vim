@@ -20,14 +20,14 @@ function! vim_llama#StartWithCtx(isrange, lstart, lend, ...)
   let s:additional_prompts = split(a:1, ",")
   if len(s:additional_prompts) >= 1
     let s:only_code           = 0 " Base prompt is changed, output everything
-    let s:additional_prompt_0 = s:additional_prompts[0] . "\n```"
+    let s:additional_prompt_0 = s:additional_prompts[0] . "\n```" . vim_llama#GetLanguage()
     if len(s:additional_prompts) >= 2
       let s:additional_prompt_1 = "\n```\n" . s:additional_prompts[1]
     else
       let s:additional_prompt_1 = "\n```\nOutput the code between ``` and ``` quotes."
     endif
   else
-      let s:additional_prompt_0 = "Continue this code from where it stopped:\n```"
+      let s:additional_prompt_0 = "Continue this code from where it stopped:\n```" . vim_llama#GetLanguage()
       let s:additional_prompt_1 = "\n```\nOutput the code between ``` and ``` quotes."
   endif
   call vim_llama#Log("Only output what's inside ``` quotes: " . s:only_code)
@@ -168,7 +168,7 @@ function! vim_llama#Fetch(timer)
       call vim_llama#Stop()
       break
     end
-    if s:only_code == 1 && s:is_between_quotes == 0
+    if s:only_code == 1 && s:is_between_quotes != 1
       let s:register = 0
     endif
 
@@ -183,6 +183,9 @@ function! vim_llama#Fetch(timer)
     endif
 
     if s:only_code == 1 && get(obj, "response") == "```" && s:is_between_quotes == 0
+      let s:is_between_quotes = 0.5
+    endif
+    if s:is_between_quotes == 0.5 && get(obj, "response") == "\n"
       let s:is_between_quotes = 1
     endif
   endfor
@@ -322,4 +325,16 @@ endfunction
 
 function! Min(a,b)
   return a:a < a:b ? a:a : a:b
+endfunction
+
+function! vim_llama#GetLanguage()
+  let s:cur_buf = bufnr("%")
+  call bufload(s:cur_buf)
+  " If vimbuffer 1st line is a shabang
+  let l:firstline = getbufline(s:cur_buf, 1, 1)[0]
+  if l:firstline =~ '^#!'
+    return matchstr(l:firstline, '[^/]\+$')
+  else
+    return ""
+  endif
 endfunction
