@@ -45,6 +45,12 @@ if ! exists("g:vim_llama_run_script")
   let g:vim_llama_run_script = expand("<sfile>:p:h:h") . "/scripts/run_ollama.py"
 endif
 
+if !exists(":AsyncRun")
+   echoerr '"asyncrun" plugin is required.'
+   echoerr 'You can install it via: Plug "skywind3000/asyncrun.vim"'
+   finish
+endif
+
 if TestOllamaConnection()
   finish
 endif
