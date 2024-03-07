@@ -50,7 +50,7 @@ function! vim_llama#Start(prompt)
   let cmd                       = g:vim_llama_run_script . " --model " . g:vim_llama_model
   let cmd                       = cmd          . " --path "  . s:tmp_path
   let cmd                       = cmd          . " --ip "    . g:vim_llama_ip
-  let cmd                       = cmd          . " --port "  . g:vim_llama_port . " &"
+  let cmd                       = cmd          . " --port "  . g:vim_llama_port . " "
   call vim_llama#Log("Command to be run: " . cmd)
   call vim_llama#Log("Prompt is:\n". a:prompt)
 
@@ -62,7 +62,8 @@ function! vim_llama#Start(prompt)
 
   call system("echo -e '" . a:prompt . "' > " . s:tmp_path . "/.vimllama.ctx")
   call system("echo '" . cmd . "' > " . s:tmp_path . "/.vimllama.cmd")
-  call system(cmd)
+  " call system(cmd)
+  exec "AsyncRun " . cmd
   call timer_start(2000, 'vim_llama#Fetch')
 endfunction
 
