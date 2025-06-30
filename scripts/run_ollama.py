@@ -23,9 +23,12 @@ with open(f'{args.path}/.vimllama.ctx', 'r') as f:
 
 curl_dict = {
   'model': args.model,
-  'prompt': prompt
+  'prompt': prompt,
+  'think': False,
 }
 cmd = [f"curl --no-buffer -X POST http://{args.ip}:{args.port}/api/generate -d \'"+json.dumps(curl_dict)+"\' 2>/dev/null"]
+with open(f"{args.path}/.vimllama.cmd", "a") as f:
+    f.write(cmd[0])
 system(f'rm -f {args.path}/.vimllama.stop')
 system(f'rm -f {args.path}/.vimllama.resp && touch {args.path}/.vimllama.resp')
 

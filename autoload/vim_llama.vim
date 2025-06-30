@@ -28,7 +28,7 @@ function! vim_llama#StartWithCtx(isrange, lstart, lend, ...)
     endif
   else
       let s:additional_prompt_0 = "Continue this code from where it stopped:\n```" . vim_llama#GetLanguage()
-      let s:additional_prompt_1 = "\n```\nOutput the code between ``` and ``` quotes."
+      let s:additional_prompt_1 = "\n```\nOutput the code between ``` and ``` quotes./no_think"
   endif
   call vim_llama#Log("Only output what's inside ``` quotes: " . s:only_code)
 
